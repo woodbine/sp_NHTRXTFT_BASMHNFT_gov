@@ -99,51 +99,30 @@ soup = BeautifulSoup(html, 'lxml')
 blocks = soup.find('table', 'DataGrid oDataGrid').find_all('a')
 for block in blocks:
         link = 'http://www.bsmhft.nhs.uk/about-us/trust-documents/financial-transparency/'+block['href']
-        # print link
+
         year = block.text.strip()[-4:]
         if 'Pre' in block.text.strip():
             year = '2014'
         current_html = urllib2.urlopen(link)
         current_soup = BeautifulSoup(current_html, 'lxml')
-        try:
-            blocks = current_soup.find('table', 'DataGrid oDataGrid').find('tbody').find_all('tr')
-        except:
-            blocks = current_soup.find('table', 'DataGrid oDataGrid').find_all('tr')
+        blocks = current_soup.find('table', 'DataGrid oDataGrid').find_all('tr')
         for block in blocks:
-            try:
-                file_url = 'http://www.bsmhft.nhs.uk'+block.find('td').find_next('td').find_next('td').find('a')['href']
-            except:
-                pass
-            # if 'categoryesctl655152=645' in file_url:
-            #     current_html = urllib2.urlopen(file_url)
-            #     current_soup = BeautifulSoup(current_html, 'lxml')
-            #     try:
-            #         blocks = current_soup.find('table', 'DataGrid oDataGrid').find('tbody').find_all('tr')
-            #     except:
-            #         blocks = current_soup.find('table', 'DataGrid oDataGrid').find_all('tr')
-            #     for block in blocks:
-            #         file_url = 'http://www.bsmhft.nhs.uk'+block.find('td').find_next('td').find_next('td').find('a')['href']
-            #         title = block.find('td').find_next('td').text.strip()
-            #         csvMth = title.split('25k')[-1].strip()[:3]
-            #         csvYr = year
-            #         if '-' in title:
-            #             csvMth = 'Y1'
-            #             csvYr = '2014'
-            #         if csvMth == '':
-            #             continue
-            #         csvMth = convert_mth_strings(csvMth.upper())
-            #         data.append([csvYr, csvMth, file_url])
-            # print file_url
-            title = block.find('td').find_next('td').text.strip()
-            csvMth = title.split('25k')[-1].strip()[:3]
-            csvYr = year
-            if '-' in title:
-                csvMth = 'Y1'
-                csvYr = '2014'
-            if csvMth == '':
-                continue
-            csvMth = convert_mth_strings(csvMth.upper())
-            data.append([csvYr, csvMth, file_url])
+            a_link = block.find('a')
+            if a_link:
+                file_url = 'http://www.bsmhft.nhs.uk/about-us/trust-documents/financial-transparency/'+block.find('a')['href']
+                file_html = urllib2.urlopen(file_url)
+                file_soup = BeautifulSoup(file_html, 'lxml')
+                url = 'http://www.bsmhft.nhs.uk'+file_soup.find('a', text=re.compile('Download'))['href']
+                title = block.text.strip()
+                csvMth = title.split('25k')[-1].strip()[:3]
+                csvYr = year
+                if '-' in title:
+                    csvMth = 'Y1'
+                    csvYr = '2014'
+                if csvMth == '':
+                    continue
+                csvMth = convert_mth_strings(csvMth.upper())
+                data.append([csvYr, csvMth, url])
 
 
 #### STORE DATA 1.0
